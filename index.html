@@ -768,7 +768,7 @@
             const userPrompt = `\n學生的大作：\n"""\n${contentText}\n"""\n\n目前指標統計：\n- 總字數：${charCount} (目標 >= 100 字)\n- 句末符號數量：${endPunctuationCount} (目標 >= 3 個)\n- 是否偵測到分號 (；)：${hasSemicolon ? '是' : '否'}\n- 是否偵測到冒號 (：)與引號 (「」或『』)：${hasColon && hasQuotes ? '是' : '否'}\n- 是否偵測到專名號 (<u>)：${hasU ? '是' : '否'}\n\n請依據鱗瀧老師的溫和口吻，為這篇拼貼作品進行寫作診斷與具體的「句子升級方案」，點出學生寫作好的地方，並針對未達標的指標溫柔指點。`;
 
             // ⚠️ 備註：此處 apiKey 會在 Canvas 平台上自動注入。若要自己完全獨立執行，請自行補上金鑰。
-            const apiKey = ""; 
+            const apiKey = "AQ.Ab8RN6IJ4zHXb14bKANzcngNZLNGYgy7gy2mHb59SubTVRniYQ"; 
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
             let response = null;
