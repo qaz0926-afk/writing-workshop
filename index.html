@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鬼殺隊任務回報──標點符號數位寫作坊 (多人共做版)</title>
+    <!-- 引入 Tailwind CSS 與 Google 字型 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 【新增】引入 Supabase 官方即時通訊套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        /* 增加學生閱讀舒適度 */
+        textarea, input {
+            font-size: 1.125rem !important; /* 18px */
+            line-height: 1.75rem !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- 頂部大字導覽列 -->
+    <header class="bg-white border-b-4 border-emerald-600 sticky top-0 z-50 px-6 py-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-scroll text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+                        鬼殺隊任務回報──標點符號數位寫作坊
+                    </h1>
+                    <p class="text-sm md:text-base text-slate-600 mt-1 font-semibold">
+                        高年級標點符號大挑戰：分號 ；、專名號 ＿＿、冒號 ：、引號 「」與多元標點
+                    </p>
+                </div>
+            </div>
+            <!-- 【修改】顯示當前組別房間提示 -->
+            <div class="flex flex-col items-end gap-1">
+                <div class="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border-2 border-emerald-500/30 text-sm">
+                    <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span class="text-emerald-800 font-extrabold" id="room-display"><i class="fa-solid fa-users mr-1"></i> 連線中...</span>
+                </div>
+                <span class="text-xs text-slate-400 font-bold" id="room-hint">提示：網址後方加上 ?room=組別名稱 可分開畫布</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full flex flex-col gap-8">
+        
+        <!-- 最上方優美示範區 -->
+        <section class="bg-white border-4 border-emerald-600 rounded-3xl p-6 shadow-lg">
+            <div class="flex items-center gap-3 mb-4 border-b-2 border-slate-100 pb-3">
+                <span class="bg-emerald-100 text-emerald-800 text-lg w-8 h-8 rounded-full flex items-center justify-center font-black">★</span>
+                <h2 class="text-2xl font-black text-emerald-900">鱗瀧老師的優美寫作示範區（請觀察標點符號的妙用）</h2>
+            </div>
+            
+            <div class="bg-emerald-50/50 border-2 border-emerald-200 rounded-2xl p-5 mb-4">
+                <p class="text-xl text-slate-800 leading-loose font-medium select-all">
+                    那田蜘蛛山的任務極為險惡，四周瀰漫著白色的濃霧<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">；</strong>我們在昏暗的森林裡寸步難行。我負責使出水之呼吸禦敵<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">（</strong>此時佩刀突然被銳利的鬼絲切斷<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">）</strong><strong class="text-emerald-700 bg-emerald-100 px-1 rounded">；</strong>禰豆子則義無反顧地衝出木箱保護我。經歷了這場驚心動魄的戰役<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">——</strong>我們在生死關頭領悟了火之神神樂！
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-base text-slate-700 font-semibold bg-slate-50 p-4 rounded-xl">
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-600 font-bold">；分號</span>
+                    <span>用在並列的句子之間，如說明「大霧籠罩」與「寸步難行」兩種對稱的慘烈情境。</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-600 font-bold">（ ）夾注號</span>
+                    <span>用在句子中間，用來補充、備註說明此時我的刀子斷掉了，不影響主線閱讀。</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-600 font-bold">—— 破折號</span>
+                    <span>拉長語氣，用在「經歷了這場戰役」後，補充轉折並強調最後震撼的結果。</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 步驟一：選擇原始短文 -->
+        <section class="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-md">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">1</span>
+                <h2 class="text-2xl font-black text-slate-800">第一步：小組共同挑選一個「原始任務短文」</h2>
+            </div>
+            
+            <p class="text-base text-slate-600 mb-4 font-medium">選中任務後，原始的短文內容會直接載入下方的分工編輯區內，大家可以在上面直接加字、增減與修改喔！</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <!-- 短文 A -->
+                <button onclick="selectPreset('A', true)" id="btn-preset-A" class="preset-btn group text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">任務 A</span>
+                            <span class="text-xs text-slate-500 font-semibold">蜘蛛山之戰</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+                            蜘蛛鬼的絲很銳利，我的刀斷了。後來禰豆子出來幫我，我們打敗了敵人。我很感謝妹妹。
+                        </p>
+                    </div>
+                </button>
+
+                <!-- 短文 B -->
+                <button onclick="selectPreset('B', true)" id="btn-preset-B" class="preset-btn group text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">任務 B</span>
+                            <span class="text-xs text-slate-500 font-semibold">無限列車</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+                            火車上有惡鬼吃人，我和大哥去保護乘客。大哥為了保護大家，最後犧牲了。我傷心地發誓要變強。
+                        </p>
+                    </div>
+                </button>
+
+                <!-- 短文 C -->
+                <button onclick="selectPreset('C', true)" id="btn-preset-C" class="preset-btn group text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">任務 C</span>
+                            <span class="text-xs text-slate-500 font-semibold">鼓之屋相遇</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+                            我在響鼓屋子裡迷路了。我遇到善逸和伊之助，大家合力殺鬼。我們變成了好朋友。
+                        </p>
+                    </div>
+                </button>
+
+                <!-- 短文 D -->
+                <button onclick="selectPreset('D', true)" id="btn-preset-D" class="preset-btn group text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">任務 D</span>
+                            <span class="text-xs text-slate-500 font-semibold">蝶屋敷修練</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+                            大戰後我們受重傷，被送到蝶屋敷。忍小姐的訓練很嚴格，我每天拼命練習。我成功學會了新呼吸法。
+                        </p>
+                    </div>
+                </button>
+
+                <!-- 短文 E -->
+                <button onclick="selectPreset('E', true)" id="btn-preset-E" class="preset-btn group text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">任務 E</span>
+                            <span class="text-xs text-slate-500 font-semibold">刀匠村危機</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+                            惡鬼突然進攻刀匠村。我和兩位柱前輩衝上前線，跟敵人激戰。我們成功保護了村子。
+                        </p>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- 教學引導提示箱 (七何法與修辭) -->
+        <section class="bg-amber-50 border-4 border-amber-500 rounded-3xl p-6 shadow-md">
+            <h3 class="text-xl md:text-2xl font-black text-amber-950 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-600"></i> 
+                大師級擴寫秘笈（請善用這些方法完成擴寫！）
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3 text-base text-amber-900 font-semibold">
+                <div>
+                    <h4 class="text-lg font-black text-amber-800 border-b border-amber-300 pb-1 mb-2">🗺️ 1. 七何法 (擴寫骨架)</h4>
+                    <p class="leading-relaxed">
+                        在你的段落中加入：是誰？（<b>人</b>）、什麼時候？（<b>時</b>）、在哪裡？（<b>地</b>）、發生什麼事？（<b>事</b>）、使用了什麼武器或工具？（<b>物</b>）、周圍的環境如何？（<b>景</b>）、你心中有何感受？（<b>感</b>）。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-black text-amber-800 border-b border-amber-300 pb-1 mb-2">🎨 2. 華麗的修辭 (美化句子)</h4>
+                    <p class="leading-relaxed">
+                        試著加入：<span class="bg-white px-1 rounded border">譬喻法</span>（例：絲線銳利得像一把把寒光閃閃的冰刀）、<span class="bg-white px-1 rounded border">擬人法</span>（例：狂風在耳邊憤怒地咆哮）、<span class="bg-white px-1 rounded border">映襯法</span>（例：刀雖斷了，心中的熱血卻更沸騰）、<span class="bg-white px-1 rounded border">排比法</span>。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 步驟二：分工寫作區 -->
+        <section class="flex flex-col gap-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">2</span>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800">第二步：組內分工，進行段落擴寫</h2>
+                        <p class="text-sm text-slate-500 font-semibold mt-1">請組員各認領一個區塊進行華麗擴寫，點擊下方的大字標點或詞彙可直接插入文字框！</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg border-2 border-blue-200 text-sm font-extrabold">組員A 負責【起因】</span>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-lg border-2 border-amber-200 text-sm font-extrabold">組員B/C 負責【經過】</span>
+                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-lg border-2 border-purple-200 text-sm font-extrabold">組員D 負責【結果】</span>
+                </div>
+            </div>
+
+            <!-- 垂直排卡 1: 起因 -->
+            <div class="bg-white border-2 border-blue-200 rounded-3xl p-6 shadow-md flex flex-col gap-4">
+                <div class="flex justify-between items-center border-b border-blue-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4.5 h-4.5 rounded-full bg-blue-500 block"></span>
+                        <h3 class="text-xl font-bold text-blue-900">【起因段落】 ── 故事的開端</h3>
+                    </div>
+                    <span class="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold border border-blue-300">組員 A 認領區</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-8 flex flex-col gap-3">
+                        <label for="input-cause" class="text-base text-slate-600 font-semibold">請在下方文字框中直接增刪修改、加入細節：</label>
+                        <textarea id="input-cause" placeholder="請先選擇上方任務短文..." class="w-full h-48 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 text-slate-800 font-medium focus:outline-none focus:border-blue-500 focus:bg-white custom-scrollbar"></textarea>
+                        
+                        <div class="bg-slate-100 p-4 rounded-2xl">
+                            <p class="text-sm text-slate-600 font-bold mb-2"><i class="fa-solid fa-keyboard mr-1"></i> 點擊快速插入高年級標點符號（若選取文字可自動包覆）：</p>
+                            <div class="flex flex-wrap gap-2" id="punct-keyboard-cause"></div>
+                        </div>
+                    </div>
+
+                    <!-- 推薦素材 A -->
+                    <div class="lg:col-span-4 flex flex-col justify-between bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                        <div>
+                            <h4 class="text-base font-bold text-blue-900 mb-3"><i class="fa-solid fa-tags text-blue-600"></i> 起因推薦素材 (點擊插入)：</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="insertAtCursor('input-cause', '<u>炭治郎</u>')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm"><u>專名：炭治郎</u></button>
+                                <button onclick="insertAtCursor('input-cause', '<u>那田蜘蛛山</u>')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm"><u>地名：那田蜘蛛山</u></button>
+                                <button onclick="insertAtCursor('input-cause', '勢如破竹')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm">勢如破竹</button>
+                                <button onclick="insertAtCursor('input-cause', '千鈞一髮')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm">千鈞一髮</button>
+                                <button onclick="insertAtCursor('input-cause', '驚心動魄')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm">驚心動魄</button>
+                                <button onclick="insertAtCursor('input-cause', '漆黑的一片')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm">漆黑的一片</button>
+                                <button onclick="insertAtCursor('input-cause', '狂怒地咆哮')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-blue-600 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-xl text-sm font-bold transition-all shadow-sm">狂怒地咆哮</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-blue-200/50 mt-4">
+                            <span class="text-sm text-slate-500 font-bold" id="count-cause">字數: 0</span>
+                            <button onclick="copyToClipboard('input-cause', 'btn-copy-cause')" id="btn-copy-cause" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-sm flex items-center gap-1.5 shadow-sm transition-all">
+                                <i class="fa-solid fa-copy"></i> 複製起因
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 垂直排卡 2: 經過 -->
+            <div class="bg-white border-2 border-amber-200 rounded-3xl p-6 shadow-md flex flex-col gap-4">
+                <div class="flex justify-between items-center border-b border-amber-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4.5 h-4.5 rounded-full bg-amber-500 block"></span>
+                        <h3 class="text-xl font-bold text-amber-900">【經過段落】 ── 驚險的高潮</h3>
+                    </div>
+                    <span class="text-sm bg-amber-50 text-amber-700 px-3 py-1 rounded-full font-bold border border-amber-300">組員 B/C 認領區</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-8 flex flex-col gap-3">
+                        <label for="input-process" class="text-base text-slate-600 font-semibold">請在下方文字框中直接增刪修改、加入細節：</label>
+                        <textarea id="input-process" placeholder="請先選擇上方任務短文..." class="w-full h-48 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 text-slate-800 font-medium focus:outline-none focus:border-amber-500 focus:bg-white custom-scrollbar"></textarea>
+                        
+                        <div class="bg-slate-100 p-4 rounded-2xl">
+                            <p class="text-sm text-slate-600 font-bold mb-2"><i class="fa-solid fa-keyboard mr-1"></i> 點擊快速插入高年級標點符號（若選取文字可自動包覆）：</p>
+                            <div class="flex flex-wrap gap-2" id="punct-keyboard-process"></div>
+                        </div>
+                    </div>
+
+                    <!-- 推薦素材 B -->
+                    <div class="lg:col-span-4 flex flex-col justify-between bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
+                        <div>
+                            <h4 class="text-base font-bold text-amber-900 mb-3"><i class="fa-solid fa-tags text-amber-600"></i> 經過推薦素材 (點擊插入)：</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="insertAtCursor('input-process', '<u>禰豆子</u>')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm"><u>專名：禰豆子</u></button>
+                                <button onclick="insertAtCursor('input-process', '<u>煉獄杏壽郎</u>')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm"><u>專名：煉獄杏壽郎</u></button>
+                                <button onclick="insertAtCursor('input-process', '遍體鱗傷')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm">遍體鱗傷</button>
+                                <button onclick="insertAtCursor('input-process', '化險為夷')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm">化險為夷</button>
+                                <button onclick="insertAtCursor('input-process', '義無反顧')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm">義無反顧</button>
+                                <button onclick="insertAtCursor('input-process', '使出渾身解數')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm">使出渾身解數</button>
+                                <button onclick="insertAtCursor('input-process', '大聲高喊：')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-amber-600 hover:text-white border-2 border-slate-200 hover:border-amber-600 rounded-xl text-sm font-bold transition-all shadow-sm">大聲高喊：</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-amber-200/50 mt-4">
+                            <span class="text-sm text-slate-500 font-bold" id="count-process">字數: 0</span>
+                            <button onclick="copyToClipboard('input-process', 'btn-copy-process')" id="btn-copy-process" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-xl text-sm flex items-center gap-1.5 shadow-sm transition-all">
+                                <i class="fa-solid fa-copy"></i> 複製經過
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 垂直排卡 3: 結果 -->
+            <div class="bg-white border-2 border-purple-200 rounded-3xl p-6 shadow-md flex flex-col gap-4">
+                <div class="flex justify-between items-center border-b border-purple-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4.5 h-4.5 rounded-full bg-purple-500 block"></span>
+                        <h3 class="text-xl font-bold text-purple-900">【結果與感受段落】 ── 感人的結局</h3>
+                    </div>
+                    <span class="text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full font-bold border border-purple-300">組員 D 認領區</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-8 flex flex-col gap-3">
+                        <label for="input-result" class="text-base text-slate-600 font-semibold">請在下方文字框中直接增刪修改、加入細節：</label>
+                        <textarea id="input-result" placeholder="請先選擇上方任務短文..." class="w-full h-48 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 text-slate-800 font-medium focus:outline-none focus:border-purple-500 focus:bg-white custom-scrollbar"></textarea>
+                        
+                        <div class="bg-slate-100 p-4 rounded-2xl">
+                            <p class="text-sm text-slate-600 font-bold mb-2"><i class="fa-solid fa-keyboard mr-1"></i> 點擊快速插入高年級標點符號（若選取文字可自動包覆）：</p>
+                            <div class="flex flex-wrap gap-2" id="punct-keyboard-result"></div>
+                        </div>
+                    </div>
+
+                    <!-- 推薦素材 C -->
+                    <div class="lg:col-span-4 flex flex-col justify-between bg-purple-50/50 p-4 rounded-2xl border border-purple-100">
+                        <div>
+                            <h4 class="text-base font-bold text-purple-900 mb-3"><i class="fa-solid fa-tags text-purple-600"></i> 結果推薦素材 (點擊插入)：</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="insertAtCursor('input-result', '<u>蝶屋敷</u>')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm"><u>專名：蝶屋敷</u></button>
+                                <button onclick="insertAtCursor('input-result', '無悔')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">無悔</button>
+                                <button onclick="insertAtCursor('input-result', '奉獻')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">奉獻</button>
+                                <button onclick="insertAtCursor('input-result', '震撼')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">震撼</button>
+                                <button onclick="insertAtCursor('input-result', '默默地流淚')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">默默地流淚</button>
+                                <button onclick="insertAtCursor('input-result', '綻放出璀璨的光芒')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">綻放出璀璨的光芒</button>
+                                <button onclick="insertAtCursor('input-result', '我暗自發誓：')" class="px-3 py-1.5 bg-white text-slate-700 hover:bg-purple-600 hover:text-white border-2 border-slate-200 hover:border-purple-600 rounded-xl text-sm font-bold transition-all shadow-sm">我暗自發誓：</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-purple-200/50 mt-4">
+                            <span class="text-sm text-slate-500 font-bold" id="count-result">字數: 0</span>
+                            <button onclick="copyToClipboard('input-result', 'btn-copy-result')" id="btn-copy-result" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl text-sm flex items-center gap-1.5 shadow-sm transition-all">
+                                <i class="fa-solid fa-copy"></i> 複製結果
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 步驟三：拼貼與 AI 檢核區 -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- 左側拼貼區 -->
+            <div class="lg:col-span-7 bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-lg flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">3</span>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900">第三步：大作拼貼與合成</h2>
+                                <p class="text-sm text-slate-500 font-semibold mt-0.5">由統整人員一鍵組裝，或直接在框內潤潤筆！</p>
+                            </div>
+                        </div>
+                        <button onclick="assembleParagraphs(true)" class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 shadow-md transition-all">
+                            <i class="fa-solid fa-puzzle-piece"></i> 一鍵自動拼貼組裝
+                        </button>
+                    </div>
+
+                    <textarea id="final-paragraph" placeholder="將起因、經過、結果三個部分貼在這裡，合成為一篇連貫、優美的 100 字以上任務回報短文。您也可以在此文字框中點擊下方的標點符號鍵盤進行修改喔！" class="w-full h-80 bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white custom-scrollbar mb-4 leading-loose text-lg font-medium"></textarea>
+                    
+                    <div class="bg-slate-100 p-4 rounded-2xl">
+                        <p class="text-sm text-slate-600 font-bold mb-2"><i class="fa-solid fa-keyboard mr-1"></i> 微調小幫手 ── 點擊插入或包覆標點符號：</p>
+                        <div class="flex flex-wrap gap-2" id="punct-keyboard-final"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-between pt-6 border-t border-slate-200 mt-6">
+                    <div class="flex flex-col gap-1 text-base text-slate-600 font-bold">
+                        <span id="final-word-count">字數: 0 字 (需滿 100 字)</span>
+                        <span id="final-punctuation-check" class="text-emerald-700">尚未偵測到標點</span>
+                    </div>
+                    <button onclick="checkWithAI()" class="w-full sm:w-auto px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
+                        <i class="fa-solid fa-robot animate-bounce"></i> 鱗瀧老師 AI 智慧診斷
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右側 AI 回報與建議 -->
+            <div class="lg:col-span-5 bg-white border-4 border-slate-800 rounded-3xl p-6 shadow-lg flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div>
+                    <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-200">
+                        <i class="fa-solid fa-magnifying-glass-chart text-emerald-600 text-xl"></i>
+                        <h2 class="text-xl font-bold text-slate-900">鱗瀧老師的智慧診斷回報</h2>
+                    </div>
+
+                    <div id="ai-idle-state" class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4 border border-slate-200 text-slate-400">
+                            <i class="fa-solid fa-envelope-open-text text-3xl"></i>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800">尚未送出診斷</p>
+                        <p class="text-sm text-slate-500 max-w-xs mt-2 leading-relaxed">請在左側拼貼區輸入完成的文章後，點擊「鱗瀧老師 AI 智慧診斷」按鈕。</p>
+                    </div>
+
+                    <div id="ai-loading-state" class="hidden flex flex-col items-center justify-center py-20 text-center">
+                        <div class="relative w-16 h-16 mb-4">
+                            <div class="absolute inset-0 rounded-full border-4 border-emerald-100"></div>
+                            <div class="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin"></div>
+                        </div>
+                        <p class="text-lg font-black text-emerald-700 animate-pulse">正在請鱗瀧老師細細閱讀中...</p>
+                        <p class="text-sm text-slate-500 mt-2">老師正在為你們檢查字數、標點符號與語句修辭喔！</p>
+                    </div>
+
+                    <div id="ai-result-state" class="hidden flex-col gap-4">
+                        <div class="p-5 rounded-2xl bg-slate-50 border-2 border-slate-200 flex flex-col gap-4 shadow-inner">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                <span class="text-sm font-black px-3 py-1 rounded-full border text-emerald-800 bg-emerald-100 border-emerald-400" id="ai-verdict">過關 / 通過</span>
+                                <span class="text-xs text-slate-500 font-bold" id="ai-time">剛才</span>
+                            </div>
+                            
+                            <div class="text-base leading-loose text-slate-800 custom-scrollbar max-h-96 overflow-y-auto pr-1" id="ai-suggestion-text"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-200 mt-6">
+                    <button onclick="copyFinalResult()" id="btn-copy-final" disabled class="w-full px-5 py-4 bg-slate-200 text-slate-400 cursor-not-allowed font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-share-from-square"></i> 一鍵複製大作 (準備貼上 Padlet)
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white px-6 py-6 mt-12 shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500 font-medium">
+            <p>© 2026 鬼殺隊高年級語文研究小組. 整合 Google Gemini 語言科技高規格智慧助教.</p>
+            <div class="flex gap-4">
+                <span class="hover:text-emerald-600 transition-colors"><i class="fa-solid fa-book-open mr-1"></i> 高年級必備技能</span>
+                <span class="hover:text-emerald-600 transition-colors"><i class="fa-solid fa-gamepad mr-1"></i> 趣味合作寫作</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==========================================
+        // ⚠️ 老師請在此填入您的 Supabase 連線資訊 ⚠️
+        // ==========================================
+        const SUPABASE_URL = "https://rvkmzllnphhbnaxfvkbz.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_judPaQ4xzJy9u0SxoeP_-g_-bcEpFGq"; 
+        
+        let supabaseClient = null;
+        let realtimeChannel = null;
+
+        // 讀取網址列的房間名稱，預設為 'default-room'
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomName = urlParams.get('room') || 'default-room';
+
+        // 預設原始短文資料集
+        const presetData = {
+            'A': { cause: '蜘蛛鬼的絲很銳利，我的刀斷了。', process: '後來禰豆子出來幫我，我們打敗了敵人。', result: '我很感謝妹妹。' },
+            'B': { cause: '火車上有惡鬼吃人，我和大哥去保護乘客。', process: '大哥為了保護大家，最後犧牲了。', result: '我傷心地發誓要變強。' },
+            'C': { cause: '我在響鼓屋子裡迷路了。', process: '我遇到善逸和伊之助，大家合力殺鬼。', result: '我們變成了好朋友。' },
+            'D': { cause: '大戰後我們受重傷，被送到蝶屋敷。', process: '忍小姐的訓練很嚴格，我每天拼命練習。', result: '我成功學會了新呼吸法。' },
+            'E': { cause: '惡鬼突然進攻刀匠村。', process: '我和兩位柱前輩衝上前線，跟敵人激戰。', result: '我們成功保護了村子。' }
+        };
+
+        const punctuationList = [
+            { label: '。', value: '。', wrap: false, title: '句號' },
+            { label: '，', value: '，', wrap: false, title: '逗號' },
+            { label: '、', value: '、', wrap: false, title: '頓號' },
+            { label: '；', value: '；', wrap: false, title: '分號' },
+            { label: '：', value: '：', wrap: false, title: '冒號' },
+            { label: '？', value: '？', wrap: false, title: '問號' },
+            { label: '！', value: '！', wrap: false, title: '驚嘆號' },
+            { label: '「 」', value: '「」', wrap: true, title: '單引號' },
+            { label: '『 』', value: '『』', wrap: true, title: '雙引號' },
+            { label: '〈 〉', value: '〈〉', wrap: true, title: '單書名號' },
+            { label: '《 》', value: '《》', wrap: true, title: '雙書名號' },
+            { label: '（ ）', value: '（）', wrap: true, title: '夾注號' },
+            { label: '——', value: '——', wrap: false, title: '破折號' },
+            { label: '……', value: '……', wrap: false, title: '刪節號' },
+            { label: '・', value: '・', wrap: false, title: '間隔號' },
+            { label: '～', value: '～', wrap: false, title: '連接號(波浪)' },
+            { label: '－', value: '－', wrap: false, title: '連接號(橫線)' }
+        ];
+
+        let currentPreset = '';
+
+        // 【新增】初始化 Supabase 即時通訊連線
+        function initSupabase() {
+            if (SUPABASE_URL.includes("你的專案代號")) {
+                document.getElementById('room-display').innerText = "⚠️ 未設定雲端金鑰 (單機模式)";
+                return;
+            }
+
+            // 建立客戶端
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            document.getElementById('room-display').innerHTML = `<i class="fa-solid fa-users mr-1"></i> 房間：${roomName}`;
+
+            // 訂閱即時廣播頻道
+            realtimeChannel = supabaseClient.channel(`room_${roomName}`);
+            
+            realtimeChannel
+                .on('broadcast', { event: 'sync-input' }, (payload) => {
+                    const el = document.getElementById(payload.payload.id);
+                    if (el && document.activeElement !== el) {
+                        el.value = payload.payload.value;
+                        updateCounters();
+                    }
+                })
+                .on('broadcast', { event: 'sync-preset' }, (payload) => {
+                    selectPreset(payload.payload.type, false);
+                })
+                .on('broadcast', { event: 'sync-assemble' }, (payload) => {
+                    document.getElementById('final-paragraph').value = payload.payload.value;
+                    updateCounters();
+                })
+                .subscribe();
+        }
+
+        // 【新增】同步輸入框內容給全組
+        function broadcastInput(id, value) {
+            if (!realtimeChannel) return;
+            realtimeChannel.send({
+                type: 'broadcast',
+                event: 'sync-input',
+                payload: { id, value }
+            });
+        }
+
+        // 動態生成標點鍵盤
+        function generateKeyboard(containerId, textareaId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            punctuationList.forEach(punct => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'px-3 py-1.5 bg-white text-slate-800 hover:bg-slate-200 border-2 border-slate-300 font-bold rounded-xl text-base transition-all shadow-sm';
+                btn.innerText = punct.label;
+                btn.title = punct.title;
+                btn.onclick = () => {
+                    insertPunctuation(textareaId, punct.value, punct.wrap);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 選擇預設短文 (isOrigin 代表是點擊觸發還是收到同步訊號觸發)
+        function selectPreset(type, isOrigin = true) {
+            currentPreset = type;
+            
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50');
+                btn.classList.add('border-slate-200', 'bg-slate-50');
+            });
+            const selectedBtn = document.getElementById(`btn-preset-${type}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50');
+                selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
+            }
+
+            document.getElementById('input-cause').value = presetData[type].cause;
+            document.getElementById('input-process').value = presetData[type].process;
+            document.getElementById('input-result').value = presetData[type].result;
+
+            updateCounters();
+            
+            if (isOrigin) {
+                showToast(`已成功載入任務 ${type} 的原始句！快來進行擴寫。`);
+                if (realtimeChannel) {
+                    realtimeChannel.send({
+                        type: 'broadcast',
+                        event: 'sync-preset',
+                        payload: { type }
+                    });
+                }
+            }
+        }
+
+        // 字數統計與標點偵測
+        function updateCounters() {
+            const causeText = document.getElementById('input-cause').value;
+            const processText = document.getElementById('input-process').value;
+            const resultText = document.getElementById('input-result').value;
+            const finalText = document.getElementById('final-paragraph').value;
+
+            document.getElementById('count-cause').innerText = `字數: ${causeText.length} 字`;
+            document.getElementById('count-process').innerText = `字數: ${processText.length} 字`;
+            document.getElementById('count-result').innerText = `字數: ${resultText.length} 字`;
+            document.getElementById('final-word-count').innerText = `目前字數: ${finalText.length} 字`;
+
+            const hasSemicolon = /[;；]/.test(finalText);
+            const hasColon = /[:：]/.test(finalText);
+            const hasQuotes = /[「」『』]/.test(finalText);
+            const hasU = /<u>/.test(finalText);
+            const hasBracket = /[（）()]/.test(finalText);
+            const hasDash = /[—－——]/.test(finalText);
+
+            let checkMsg = [];
+            if (hasSemicolon) checkMsg.push('分號(O)');
+            if (hasColon) checkMsg.push('冒號(O)');
+            if (hasQuotes) checkMsg.push('引號(O)');
+            if (hasU) checkMsg.push('專名號(O)');
+            if (hasBracket) checkMsg.push('夾注號(O)');
+            if (hasDash) checkMsg.push('破折號(O)');
+
+            const countDisplay = document.getElementById('final-punctuation-check');
+            if (checkMsg.length > 0) {
+                countDisplay.innerText = `已偵測標點：${checkMsg.join('、')}`;
+                countDisplay.className = "text-emerald-700 font-extrabold";
+            } else {
+                countDisplay.innerText = `尚未偵測到高年級新標點`;
+                countDisplay.className = "text-amber-600 font-bold";
+            }
+        }
+
+        // 監聽並同步打字事件
+        ['input-cause', 'input-process', 'input-result', 'final-paragraph'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                updateCounters();
+                broadcastInput(id, e.target.value);
+            });
+        });
+
+        // 智慧標點插入函數 (支援框選包覆)
+        function insertPunctuation(textareaId, textValue, isWrap) {
+            const textarea = document.getElementById(textareaId);
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const value = textarea.value;
+
+            if (startPos !== endPos) {
+                const selectedText = value.substring(startPos, endPos);
+                if (isWrap) {
+                    const openTag = textValue.charAt(0);
+                    const closeTag = textValue.charAt(1) || '';
+                    const wrapped = openTag + selectedText + closeTag;
+                    textarea.value = value.substring(0, startPos) + wrapped + value.substring(endPos);
+                    textarea.selectionStart = startPos;
+                    textarea.selectionEnd = startPos + wrapped.length;
+                } else {
+                    textarea.value = value.substring(0, startPos) + textValue + value.substring(endPos);
+                    textarea.selectionStart = startPos + textValue.length;
+                    textarea.selectionEnd = startPos + textValue.length;
+                }
+            } else {
+                textarea.value = value.substring(0, startPos) + textValue + value.substring(endPos);
+                if (isWrap) {
+                    const newCursorPos = startPos + 1;
+                    textarea.selectionStart = newCursorPos;
+                    textarea.selectionEnd = newCursorPos;
+                } else {
+                    const newCursorPos = startPos + textValue.length;
+                    textarea.selectionStart = newCursorPos;
+                    textarea.selectionEnd = newCursorPos;
+                }
+            }
+            
+            textarea.focus();
+            updateCounters();
+            broadcastInput(textareaId, textarea.value);
+        }
+
+        function insertAtCursor(textareaId, text) {
+            const textarea = document.getElementById(textareaId);
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const value = textarea.value;
+
+            textarea.value = value.substring(0, startPos) + text + value.substring(endPos);
+            textarea.selectionStart = startPos + text.length;
+            textarea.selectionEnd = startPos + text.length;
+            
+            textarea.focus();
+            updateCounters();
+            broadcastInput(textareaId, textarea.value);
+        }
+
+        function copyToClipboard(elementId, btnId) {
+            const copyText = document.getElementById(elementId).value;
+            if (!copyText.trim()) {
+                showToast("文字框是空的，沒辦法複製喔！");
+                return;
+            }
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = copyText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const btn = document.getElementById(btnId);
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> 複製成功！`;
+                btn.className = btn.className.replace('bg-blue-600', 'bg-emerald-600').replace('bg-amber-600', 'bg-emerald-600').replace('bg-purple-600', 'bg-emerald-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    if (btnId === 'btn-copy-cause') btn.className = btn.className.replace('bg-emerald-600', 'bg-blue-600');
+                    if (btnId === 'btn-copy-process') btn.className = btn.className.replace('bg-emerald-600', 'bg-amber-600');
+                    if (btnId === 'btn-copy-result') btn.className = btn.className.replace('bg-emerald-600', 'bg-purple-600');
+                }, 1500);
+            } catch (err) {
+                showToast("複製失敗，請用 Ctrl+C 手動複製。");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // 一鍵組裝三個段落
+        function assembleParagraphs(isOrigin = true) {
+            const cause = document.getElementById('input-cause').value.trim();
+            const process = document.getElementById('input-process').value.trim();
+            const result = document.getElementById('input-result').value.trim();
+
+            if (!cause && !process && !result) {
+                if (isOrigin) showToast("組員的擴寫輸入框目前都是空的喔！");
+                return;
+            }
+
+            const assembled = `${cause}\n\n${process}\n\n${result}`;
+            document.getElementById('final-paragraph').value = assembled;
+            updateCounters();
+            
+            if (isOrigin) {
+                showToast("成功合體！組員的三個段落已依序完美裝配。");
+                if (realtimeChannel) {
+                    realtimeChannel.send({
+                        type: 'broadcast',
+                        event: 'sync-assemble',
+                        payload: { value: assembled }
+                    });
+                }
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-900 text-white font-extrabold px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-2 animate-bounce border-2 border-emerald-500';
+            toast.innerHTML = `<i class="fa-solid fa-bell text-emerald-400"></i> <span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        // 鱗瀧老師 AI 智慧診斷
+        async function checkWithAI() {
+            const contentText = document.getElementById('final-paragraph').value.trim();
+            if (!contentText) {
+                showToast("拼貼編輯區沒有文字，請先輸入或點擊一鍵拼貼！");
+                return;
+            }
+
+            document.getElementById('ai-idle-state').classList.add('hidden');
+            document.getElementById('ai-result-state').classList.add('hidden');
+            document.getElementById('ai-loading-state').classList.remove('hidden');
+
+            const charCount = contentText.length;
+            const endPunctuationCount = (contentText.match(/[。！？!?]/g) || []).length;
+            const hasSemicolon = /[;；]/.test(contentText);
+            const hasColon = /[:：]/.test(contentText);
+            const hasQuotes = /[「」『』]/.test(contentText);
+            const hasU = /<u>/.test(contentText);
+
+            const systemPrompt = `你是一位國小高年級語文專家，在學生標點寫作坊中扮演「鱗瀧老師」。\n你的任務是：\n1. 檢核學生的任務報告大作，字數必須滿 100 字，且必須至少有 3 個句末符號（。！？）。\n2. 檢查學生是否融入高年級的新標點符號：分號（；）、專名號（以<u>名詞</u>底線表示）、冒號（：）與雙引號（「」或『』），並檢查其餘指定的進階符號。\n3. 語調要像鬼滅之刃中的鱗瀧老師一樣，溫柔、嚴格、極度溫暖、正向鼓勵，常叫他們「孩子們、小劍士」等。\n4. 提供語意通順的優化建議：明確列出「原本不流暢、平淡的句子」與「鱗瀧老師修飾後華麗生動、標點完美的句子」對比，並解釋修改的原因。\n5. 最後判定一個明確的「過關檢核狀態」(完美過關/有小瑕疵，繼續加油)。\n\n請以 HTML 格式提供回饋。`;
+            const userPrompt = `\n學生的大作：\n"""\n${contentText}\n"""\n\n目前指標統計：\n- 總字數：${charCount} (目標 >= 100 字)\n- 句末符號數量：${endPunctuationCount} (目標 >= 3 個)\n- 是否偵測到分號 (；)：${hasSemicolon ? '是' : '否'}\n- 是否偵測到冒號 (：)與引號 (「」或『』)：${hasColon && hasQuotes ? '是' : '否'}\n- 是否偵測到專名號 (<u>)：${hasU ? '是' : '否'}\n\n請依據鱗瀧老師的溫和口吻，為這篇拼貼作品進行寫作診斷與具體的「句子升級方案」，點出學生寫作好的地方，並針對未達標的指標溫柔指點。`;
+
+            // ⚠️ 備註：此處 apiKey 會在 Canvas 平台上自動注入。若要自己完全獨立執行，請自行補上金鑰。
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            let response = null;
+            let delay = 1000;
+            const maxRetries = 3;
+            
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userPrompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
+                    if (response.ok) break;
+                } catch (e) {
+                    if (i === maxRetries - 1) {
+                        showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
+                        return;
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+
+            if (!response || !response.ok) {
+                showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
+                return;
+            }
+
+            try {
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text || "鱗瀧老師沉思中，沒有給予回饋...";
+                
+                document.getElementById('ai-loading-state').classList.add('hidden');
+                document.getElementById('ai-result-state').classList.remove('hidden');
+                document.getElementById('ai-suggestion-text').innerHTML = formatMarkdownToHtml(aiText);
+
+                const btnFinal = document.getElementById('btn-copy-final');
+                btnFinal.disabled = false;
+                btnFinal.className = "w-full px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 transition-all";
+
+                const verdictBadge = document.getElementById('ai-verdict');
+                if (charCount >= 100 && hasSemicolon && hasColon && hasQuotes && hasU && endPunctuationCount >= 3) {
+                    verdictBadge.innerText = "🎉 鱗瀧老師核可：完美過關！";
+                    verdictBadge.className = "text-sm font-black px-3 py-1 rounded-full border text-emerald-800 bg-emerald-100 border-emerald-400";
+                } else {
+                    verdictBadge.innerText = "✍️ 鱗瀧老師提醒：有些小瑕疵！";
+                    verdictBadge.className = "text-sm font-black px-3 py-1 rounded-full border text-amber-800 bg-amber-100 border-amber-400";
+                }
+                
+                const now = new Date();
+                document.getElementById('ai-time').innerText = `診斷時間：${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            } catch (err) {
+                showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
+            }
+        }
+
+        function showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU) {
+            document.getElementById('ai-loading-state').classList.add('hidden');
+            document.getElementById('ai-result-state').classList.remove('hidden');
+            
+            let reportHtml = `<p class="font-bold text-amber-800 text-lg mb-2">【離線修練模式】鱗瀧老師的快速指引：</p>`;
+            let errors = [];
+            if (charCount < 100) errors.push(`字數不足 100 字 (目前 ${charCount} 字)。請試著使用<b>七何法</b>加入周圍環境、心情寫照與更生動的形容詞！`);
+            if (endPunctuationCount < 3) errors.push(`句末符號 (。！？) 不足 3 個 (目前 ${endPunctuationCount} 個)，請確保句子有頭有尾。`);
+            if (!hasSemicolon) errors.push(`缺少 <b>分號（；）</b>。可用來連接兩個平行對稱的畫面，例如：我專注禦敵；同伴一旁包紮。`);
+            if (!hasColon || !hasQuotes) errors.push(`缺少 <b>冒號（：）與雙引號（「」）</b>。請加入一段角色慷慨激昂的台詞或怒吼！`);
+            if (!hasU) errors.push(`缺少 <b>專名號</b>。請選取人名或地名後，點選專名號貼紙。`);
+
+            if (errors.length === 0) {
+                reportHtml += `<p class="text-emerald-700 font-extrabold text-lg">🎉 太優秀了，孩子們！你們通過了所有的標點指標考驗，這段任務回報文章不但精采，標點也非常到位。請點擊下方按鈕，複製成品前往 Padlet 吧！</p>`;
+            } else {
+                reportHtml += `<p class="text-slate-700 mb-3">孩子們，這篇作品很有潛力！但要通過柱級修練，我們還需要在細節上打磨：</p>`;
+                reportHtml += `<ul class="list-disc list-inside text-amber-900 space-y-2 text-base font-semibold">`;
+                errors.forEach(err => { reportHtml += `<li>${err}</li>`; });
+                reportHtml += `</ul>`;
+            }
+
+            document.getElementById('ai-suggestion-text').innerHTML = reportHtml;
+            const verdictBadge = document.getElementById('ai-verdict');
+            verdictBadge.innerText = errors.length === 0 ? "🎉 本地檢核：成功過關！" : "✍️ 本地檢核：仍需努力";
+            verdictBadge.className = errors.length === 0 ? "text-sm font-black px-3 py-1 rounded-full border text-emerald-800 bg-emerald-100 border-emerald-400" : "text-sm font-black px-3 py-1 rounded-full border text-amber-800 bg-amber-100 border-amber-400";
+
+            const btnFinal = document.getElementById('btn-copy-final');
+            btnFinal.disabled = false;
+            btnFinal.className = "w-full px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 transition-all";
+        }
+
+        function formatMarkdownToHtml(markdown) {
+            return markdown
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-800 font-black bg-emerald-50 px-1 rounded border border-emerald-200">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="italic text-slate-700">$1</em>')
+                .replace(/### (.*?)\n/g, '<h4 class="text-lg font-black text-slate-900 mt-4 mb-2 border-b-2 border-slate-200 pb-1">$1</h4>')
+                .replace(/## (.*?)\n/g, '<h3 class="text-xl font-black text-emerald-900 mt-5 mb-3 border-l-4 border-emerald-500 pl-2">$1</h3>')
+                .replace(/`([^`]+)`/g, '<code class="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-emerald-700 text-sm">$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function copyFinalResult() {
+            const finalText = document.getElementById('final-paragraph').value;
+            if (!finalText.trim()) {
+                showToast("拼貼區沒有文字可以複製喔！");
+                return;
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = finalText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const btn = document.getElementById('btn-copy-final');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check animate-bounce"></i> 成功複製大作！請立刻貼上 Padlet！`;
+                btn.classList.remove('bg-emerald-600');
+                btn.classList.add('bg-blue-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.add('bg-emerald-600');
+                    btn.classList.remove('bg-blue-600');
+                }, 3000);
+            } catch (err) {
+                showToast("複製失敗，請手動全選複製文字。");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        window.onload = function() {
+            generateKeyboard('punct-keyboard-cause', 'input-cause');
+            generateKeyboard('punct-keyboard-process', 'input-process');
+            generateKeyboard('punct-keyboard-result', 'input-result');
+            generateKeyboard('punct-keyboard-final', 'final-paragraph');
+
+            selectPreset('A', false);
+            
+            // 【新增】開啟時啟動 Supabase 即時同步機制
+            initSupabase();
+        }
+    </script>
+</body>
+</html>
