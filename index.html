@@ -523,16 +523,31 @@
                 .subscribe();
         }
 
-        // 【新增】同步輸入框內容給全組
-        function broadcastInput(id, value) {
-            if (!realtimeChannel) return;
-            realtimeChannel.send({
-                type: 'broadcast',
-                event: 'sync-input',
-                payload: { id, value }
-            });
-        }
+// 廣播輸入框內容
+function broadcastInput(id, value) {
+    if (realtimeChannel) {
+        realtimeChannel.send({ 
+            type: 'broadcast', 
+            event: 'sync-input', 
+            payload: { id: id, value: value } 
+        });
+    }
+}
 
+// 💡 確保四個文字框都綁定打字事件
+function bindInputEvents() {
+    const inputIds = ['input-cause', 'input-process', 'input-result', 'final-paragraph'];
+    inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // 避免重複綁定，先移除舊的再綁定新的
+            el.oninput = (e) => {
+                updateCounters();
+                broadcastInput(id, e.target.value);
+            };
+        }
+    });
+}
         // 動態生成標點鍵盤
         function generateKeyboard(containerId, textareaId) {
             const container = document.getElementById(containerId);
@@ -710,32 +725,35 @@
             document.body.removeChild(textarea);
         }
 
-        // 一鍵組裝三個段落
-        function assembleParagraphs(isOrigin = true) {
-            const cause = document.getElementById('input-cause').value.trim();
-            const process = document.getElementById('input-process').value.trim();
-            const result = document.getElementById('input-result').value.trim();
+// 一鍵組裝三個段落
+function assembleParagraphs(isOrigin = true) {
+    const cause = document.getElementById('input-cause').value.trim();
+    const process = document.getElementById('input-process').value.trim();
+    const result = document.getElementById('input-result').value.trim();
 
-            if (!cause && !process && !result) {
-                if (isOrigin) showToast("組員的擴寫輸入框目前都是空的喔！");
-                return;
-            }
+    if (!cause && !process && !result) {
+        if (isOrigin) showToast("組員的擴寫輸入框目前都是空的喔！");
+        return;
+    }
 
-            const assembled = `${cause}\n\n${process}\n\n${result}`;
-            document.getElementById('final-paragraph').value = assembled;
-            updateCounters();
-            
-            if (isOrigin) {
-                showToast("成功合體！組員的三個段落已依序完美裝配。");
-                if (realtimeChannel) {
-                    realtimeChannel.send({
-                        type: 'broadcast',
-                        event: 'sync-assemble',
-                        payload: { value: assembled }
-                    });
-                }
-            }
+    const assembled = `${cause}\n\n${process}\n\n${result}`;
+    const finalEl = document.getElementById('final-paragraph');
+    finalEl.value = assembled;
+    updateCounters();
+    
+    // 💡 核心：將拼貼好的文章同步給全組
+    if (isOrigin) {
+        showToast("成功合體！組員的三個段落已依序完美裝配。");
+        broadcastInput('final-paragraph', assembled); // 同步拼貼區
+        if (realtimeChannel) {
+            realtimeChannel.send({
+                type: 'broadcast',
+                event: 'sync-assemble',
+                payload: { value: assembled }
+            });
         }
+    }
+}
 
         function showToast(message) {
             const toast = document.createElement('div');
@@ -917,17 +935,18 @@ async function checkWithAI() {
             document.body.removeChild(textarea);
         }
 
-        window.onload = function() {
-            generateKeyboard('punct-keyboard-cause', 'input-cause');
-            generateKeyboard('punct-keyboard-process', 'input-process');
-            generateKeyboard('punct-keyboard-result', 'input-result');
-            generateKeyboard('punct-keyboard-final', 'final-paragraph');
+window.onload = function() {
+    generateKeyboard('punct-keyboard-cause', 'input-cause');
+    generateKeyboard('punct-keyboard-process', 'input-process');
+    generateKeyboard('punct-keyboard-result', 'input-result');
+    generateKeyboard('punct-keyboard-final', 'final-paragraph');
 
-            selectPreset('A', false);
-            
-            // 【新增】開啟時啟動 Supabase 即時同步機制
-            initSupabase();
-        }
+    selectPreset('A', false);
+    
+    // 💡 初始化 Supabase 並綁定所有文字框的同步事件
+    initSupabase();
+    bindInputEvents();
+}
     </script>
 </body>
 </html>
