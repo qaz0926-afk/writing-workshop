@@ -494,7 +494,7 @@
 
         let currentPreset = '';
 
-        // 初始化 Supabase 即時連線與動態補傳機制
+// 初始化 Supabase 即時連線與全欄位自動補傳機制
         function initSupabase() {
             if (SUPABASE_URL.includes("你的專案代號")) {
                 document.getElementById('room-display').innerText = "⚠️ 未設定雲端金鑰 (單機模式)";
@@ -503,7 +503,6 @@
 
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            // 開啟完整廣播與狀態追蹤
             realtimeChannel = supabaseClient.channel(`room_${roomName}`, {
                 config: { broadcast: { self: false, ack: true } }
             });
@@ -521,9 +520,8 @@
                 .on('broadcast', { event: 'sync-preset' }, (payload) => {
                     selectPreset(payload.payload.type, false);
                 })
-                // 3. 💡 新增：收到有人重新整理 / 剛進來時的「索取資料請求」
+                // 3. 💡 收到有人重新整理的「索取資料請求」：打包當前畫面的所有欄位
                 .on('broadcast', { event: 'request-state' }, () => {
-                    // 將自己畫面的最新狀態打包回傳給房間裡的所有人
                     const currentState = {
                         'input-cause': document.getElementById('input-cause').value,
                         'input-process': document.getElementById('input-process').value,
@@ -537,14 +535,31 @@
                         payload: currentState
                     });
                 })
-                // 4. 💡 新增：收到在線隊友回應的「最新全域狀態」並填入畫面
+                // 4. 💡 核心修正：收到在線隊友回應的「最新全域狀態」，精準填入所有欄位
                 .on('broadcast', { event: 'response-state' }, (payload) => {
                     const data = payload.payload;
-                    if (data['input-cause']) document.getElementById('input-cause').value = data['input-cause'];
-                    if (data['input-process']) document.getElementById('input-process').value = data['input-process'];
-                    if (data['input-result']) document.getElementById('input-result').value = data['input-result'];
-                    if (data['final-paragraph']) document.getElementById('final-paragraph').value = data['final-paragraph'];
-                    if (data['currentPreset']) selectPreset(data['currentPreset'], false);
+                    
+                    // 先同步選中的任務按鈕高亮（但不覆蓋已擴寫的文字）
+                    if (data['currentPreset']) {
+                        currentPreset = data['currentPreset'];
+                        document.querySelectorAll('.preset-btn').forEach(btn => {
+                            btn.classList.remove('border-emerald-500', 'bg-emerald-50');
+                            btn.classList.add('border-slate-200', 'bg-slate-50');
+                        });
+                        const selectedBtn = document.getElementById(`btn-preset-${currentPreset}`);
+                        if (selectedBtn) {
+                            selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50');
+                            selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
+                        }
+                    }
+
+                    // 精準填入各個分工段落與拼貼區的文字
+                    if (data['input-cause'] !== undefined) document.getElementById('input-cause').value = data['input-cause'];
+                    if (data['input-process'] !== undefined) document.getElementById('input-process').value = data['input-process'];
+                    if (data['input-result'] !== undefined) document.getElementById('input-result').value = data['input-result'];
+                    if (data['final-paragraph'] !== undefined) document.getElementById('final-paragraph').value = data['final-paragraph'];
+                    
+                    // 強制重新計算字數與標點
                     updateCounters();
                 })
                 .subscribe((status) => {
@@ -552,7 +567,7 @@
                         isSubscribed = true;
                         document.getElementById('room-display').innerHTML = `<i class="fa-solid fa-users mr-1"></i> 房間：${roomName} (連線成功)`;
                         
-                        // 💡 關鍵：連線成功後，主動向同組其他隊友索取最新狀態（以防自己是重整者）
+                        // 連線成功 0.5 秒後，向在線隊友索取全畫面的最新資料
                         setTimeout(() => {
                             realtimeChannel.send({
                                 type: 'broadcast',
@@ -609,37 +624,57 @@
             });
         }
 
-        // 選擇預設短文
-        function selectPreset(type, isOrigin = true) {
-            currentPreset = type;
-            
-            document.querySelectorAll('.preset-btn').forEach(btn => {
-                btn.classList.remove('border-emerald-500', 'bg-emerald-50');
-                btn.classList.add('border-slate-200', 'bg-slate-50');
-            });
-            const selectedBtn = document.getElementById(`btn-preset-${type}`);
-            if (selectedBtn) {
-                selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50');
-                selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
-            }
-
-            document.getElementById('input-cause').value = presetData[type].cause;
-            document.getElementById('input-process').value = presetData[type].process;
-            document.getElementById('input-result').value = presetData[type].result;
-
-            updateCounters();
-            
-            if (isOrigin) {
-                showToast(`已成功載入任務 ${type} 的原始句！快來進行擴寫。`);
-                if (realtimeChannel && isSubscribed) {
-                    realtimeChannel.send({
-                        type: 'broadcast',
-                        event: 'sync-preset',
-                        payload: { type }
-                    });
-                }
+// 選擇預設短文 (帶防呆提醒機制)
+function selectPreset(type, isOrigin = true) {
+    // 如果是學生自己在畫面上點擊按鈕 (非收到同步訊號)
+    if (isOrigin) {
+        const cause = document.getElementById('input-cause').value.trim();
+        const process = document.getElementById('input-process').value.trim();
+        const result = document.getElementById('input-result').value.trim();
+        
+        // 檢查是否有已經寫好的文字
+        const hasContent = cause || process || result;
+        
+        if (hasContent) {
+            const confirmReset = confirm(`⚠️ 警告：目前欄位中已有擴寫的文字！\n\n切換至【任務 ${type}】將會覆蓋大家目前寫好的內容，確定要重置並切換嗎？`);
+            if (!confirmReset) {
+                return; // 學生點擊取消，直接中斷不執行切換
             }
         }
+    }
+
+    currentPreset = type;
+    
+    // 切換按鈕高亮樣式
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.remove('border-emerald-500', 'bg-emerald-50');
+        btn.classList.add('border-slate-200', 'bg-slate-50');
+    });
+    const selectedBtn = document.getElementById(`btn-preset-${type}`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50');
+        selectedBtn.classList.remove('border-slate-200', 'bg-slate-50');
+    }
+
+    // 載入預設短文文字
+    document.getElementById('input-cause').value = presetData[type].cause;
+    document.getElementById('input-process').value = presetData[type].process;
+    document.getElementById('input-result').value = presetData[type].result;
+
+    updateCounters();
+    
+    // 同步給全組其他隊友
+    if (isOrigin) {
+        showToast(`已成功切換並載入任務 ${type} 的原始句！`);
+        if (realtimeChannel && isSubscribed) {
+            realtimeChannel.send({
+                type: 'broadcast',
+                event: 'sync-preset',
+                payload: { type }
+            });
+        }
+    }
+}
 
         // 字數統計與標點偵測
         function updateCounters() {
