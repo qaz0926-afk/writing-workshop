@@ -67,7 +67,7 @@
 
     <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full flex flex-col gap-8">
         
-        <!-- 最上方優美示範區 -->
+<!-- 最上方優美示範區 -->
         <section class="bg-white border-4 border-emerald-600 rounded-3xl p-6 shadow-lg">
             <div class="flex items-center gap-3 mb-4 border-b-2 border-slate-100 pb-3">
                 <span class="bg-emerald-100 text-emerald-800 text-lg w-8 h-8 rounded-full flex items-center justify-center font-black">★</span>
@@ -76,22 +76,26 @@
             
             <div class="bg-emerald-50/50 border-2 border-emerald-200 rounded-2xl p-5 mb-4">
                 <p class="text-xl text-slate-800 leading-loose font-medium select-all">
-                    那田蜘蛛山的任務極為險惡，四周瀰漫著白色的濃霧<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">；</strong>我們在昏暗的森林裡寸步難行。我負責使出水之呼吸禦敵<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">（</strong>此時佩刀突然被銳利的鬼絲切斷<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">）</strong><strong class="text-emerald-700 bg-emerald-100 px-1 rounded">；</strong>禰豆子則義無反顧地衝出木箱保護我。經歷了這場驚心動魄的戰役<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">——</strong>我們在生死關頭領悟了火之神神樂！
+                    那田蜘蛛山的任務極為險惡<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">：</strong>四周瀰漫著濃重的白霧，我們寸步難行<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">；</strong>林中隱藏著強大的鬼族，我們危機四伏。我負責使出水之呼吸禦敵<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">（</strong>此時佩刀突然被銳利的鬼絲切斷<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">）</strong>，禰豆子則義無反顧地衝出木箱保護我。經歷了這場驚心動魄的戰役<strong class="text-emerald-700 bg-emerald-100 px-1 rounded">——</strong>我們在生死關頭領悟了火之神神樂！
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-base text-slate-700 font-semibold bg-slate-50 p-4 rounded-xl">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-base text-slate-700 font-semibold bg-slate-50 p-4 rounded-xl">
+                <div class="flex gap-2 items-start">
+                    <span class="text-emerald-600 font-bold">：冒號</span>
+                    <span>用在總起句後，提起下文詳細說明「險惡」的具體兩種情境。</span>
+                </div>
                 <div class="flex gap-2 items-start">
                     <span class="text-emerald-600 font-bold">；分號</span>
-                    <span>用在並列的句子之間，如說明「大霧籠罩」與「寸步難行」兩種對稱的慘烈情境。</span>
+                    <span>用在並列的句子之間，分隔「白霧瀰漫」與「鬼族隱藏」兩種平行對稱的險境。</span>
                 </div>
                 <div class="flex gap-2 items-start">
                     <span class="text-emerald-600 font-bold">（ ）夾注號</span>
-                    <span>用在句子中間，用來補充、備註說明此時我的刀子斷掉了，不影響主線閱讀。</span>
+                    <span>用在句子中間，補充說明佩刀斷裂的突發狀況，不打斷主線敘述。</span>
                 </div>
                 <div class="flex gap-2 items-start">
                     <span class="text-emerald-600 font-bold">—— 破折號</span>
-                    <span>拉長語氣，用在「經歷了這場戰役」後，補充轉折並強調最後震撼的結果。</span>
+                    <span>拉長語氣並轉折，強烈烘託生死關頭領悟新技能的震撼結果。</span>
                 </div>
             </div>
         </section>
@@ -446,7 +450,7 @@
         </div>
     </footer>
 
-    <script>
+<script>
         // ==========================================
         // ⚠️ 老師請在此填入您的 Supabase 連線資訊 ⚠️
         // ==========================================
@@ -455,12 +459,11 @@
         
         let supabaseClient = null;
         let realtimeChannel = null;
+        let isSubscribed = false; // 追蹤連線狀態
 
-        // 讀取網址列的房間名稱，預設為 'default-room'
         const urlParams = new URLSearchParams(window.location.search);
         const roomName = urlParams.get('room') || 'default-room';
 
-        // 預設原始短文資料集
         const presetData = {
             'A': { cause: '蜘蛛鬼的絲很銳利，我的刀斷了。', process: '後來禰豆子出來幫我，我們打敗了敵人。', result: '我很感謝妹妹。' },
             'B': { cause: '火車上有惡鬼吃人，我和大哥去保護乘客。', process: '大哥為了保護大家，最後犧牲了。', result: '我傷心地發誓要變強。' },
@@ -491,21 +494,22 @@
 
         let currentPreset = '';
 
-        // 【新增】初始化 Supabase 即時通訊連線
+        // 初始化 Supabase 即時連線與動態補傳機制
         function initSupabase() {
             if (SUPABASE_URL.includes("你的專案代號")) {
                 document.getElementById('room-display').innerText = "⚠️ 未設定雲端金鑰 (單機模式)";
                 return;
             }
 
-            // 建立客戶端
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            document.getElementById('room-display').innerHTML = `<i class="fa-solid fa-users mr-1"></i> 房間：${roomName}`;
-
-            // 訂閱即時廣播頻道
-            realtimeChannel = supabaseClient.channel(`room_${roomName}`);
             
+            // 開啟完整廣播與狀態追蹤
+            realtimeChannel = supabaseClient.channel(`room_${roomName}`, {
+                config: { broadcast: { self: false, ack: true } }
+            });
+
             realtimeChannel
+                // 1. 收到一般輸入框同步事件
                 .on('broadcast', { event: 'sync-input' }, (payload) => {
                     const el = document.getElementById(payload.payload.id);
                     if (el && document.activeElement !== el) {
@@ -513,41 +517,81 @@
                         updateCounters();
                     }
                 })
+                // 2. 收到選擇短文任務同步事件
                 .on('broadcast', { event: 'sync-preset' }, (payload) => {
                     selectPreset(payload.payload.type, false);
                 })
-                .on('broadcast', { event: 'sync-assemble' }, (payload) => {
-                    document.getElementById('final-paragraph').value = payload.payload.value;
+                // 3. 💡 新增：收到有人重新整理 / 剛進來時的「索取資料請求」
+                .on('broadcast', { event: 'request-state' }, () => {
+                    // 將自己畫面的最新狀態打包回傳給房間裡的所有人
+                    const currentState = {
+                        'input-cause': document.getElementById('input-cause').value,
+                        'input-process': document.getElementById('input-process').value,
+                        'input-result': document.getElementById('input-result').value,
+                        'final-paragraph': document.getElementById('final-paragraph').value,
+                        'currentPreset': currentPreset
+                    };
+                    realtimeChannel.send({
+                        type: 'broadcast',
+                        event: 'response-state',
+                        payload: currentState
+                    });
+                })
+                // 4. 💡 新增：收到在線隊友回應的「最新全域狀態」並填入畫面
+                .on('broadcast', { event: 'response-state' }, (payload) => {
+                    const data = payload.payload;
+                    if (data['input-cause']) document.getElementById('input-cause').value = data['input-cause'];
+                    if (data['input-process']) document.getElementById('input-process').value = data['input-process'];
+                    if (data['input-result']) document.getElementById('input-result').value = data['input-result'];
+                    if (data['final-paragraph']) document.getElementById('final-paragraph').value = data['final-paragraph'];
+                    if (data['currentPreset']) selectPreset(data['currentPreset'], false);
                     updateCounters();
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        isSubscribed = true;
+                        document.getElementById('room-display').innerHTML = `<i class="fa-solid fa-users mr-1"></i> 房間：${roomName} (連線成功)`;
+                        
+                        // 💡 關鍵：連線成功後，主動向同組其他隊友索取最新狀態（以防自己是重整者）
+                        setTimeout(() => {
+                            realtimeChannel.send({
+                                type: 'broadcast',
+                                event: 'request-state',
+                                payload: {}
+                            });
+                        }, 500);
+                    } else {
+                        isSubscribed = false;
+                        document.getElementById('room-display').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> 連線中...`;
+                    }
+                });
         }
 
-// 廣播輸入框內容
-function broadcastInput(id, value) {
-    if (realtimeChannel) {
-        realtimeChannel.send({ 
-            type: 'broadcast', 
-            event: 'sync-input', 
-            payload: { id: id, value: value } 
-        });
-    }
-}
-
-// 💡 確保四個文字框都綁定打字事件
-function bindInputEvents() {
-    const inputIds = ['input-cause', 'input-process', 'input-result', 'final-paragraph'];
-    inputIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            // 避免重複綁定，先移除舊的再綁定新的
-            el.oninput = (e) => {
-                updateCounters();
-                broadcastInput(id, e.target.value);
-            };
+        // 廣播輸入框內容 (確保連線成功才發送)
+        function broadcastInput(id, value) {
+            if (realtimeChannel && isSubscribed) {
+                realtimeChannel.send({ 
+                    type: 'broadcast', 
+                    event: 'sync-input', 
+                    payload: { id: id, value: value } 
+                });
+            }
         }
-    });
-}
+
+        // 確保四個文字框都綁定打字與同步事件
+        function bindInputEvents() {
+            const inputIds = ['input-cause', 'input-process', 'input-result', 'final-paragraph'];
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.oninput = (e) => {
+                        updateCounters();
+                        broadcastInput(id, e.target.value);
+                    };
+                }
+            });
+        }
+
         // 動態生成標點鍵盤
         function generateKeyboard(containerId, textareaId) {
             const container = document.getElementById(containerId);
@@ -565,7 +609,7 @@ function bindInputEvents() {
             });
         }
 
-        // 選擇預設短文 (isOrigin 代表是點擊觸發還是收到同步訊號觸發)
+        // 選擇預設短文
         function selectPreset(type, isOrigin = true) {
             currentPreset = type;
             
@@ -587,7 +631,7 @@ function bindInputEvents() {
             
             if (isOrigin) {
                 showToast(`已成功載入任務 ${type} 的原始句！快來進行擴寫。`);
-                if (realtimeChannel) {
+                if (realtimeChannel && isSubscribed) {
                     realtimeChannel.send({
                         type: 'broadcast',
                         event: 'sync-preset',
@@ -634,15 +678,7 @@ function bindInputEvents() {
             }
         }
 
-        // 監聽並同步打字事件
-        ['input-cause', 'input-process', 'input-result', 'final-paragraph'].forEach(id => {
-            document.getElementById(id).addEventListener('input', (e) => {
-                updateCounters();
-                broadcastInput(id, e.target.value);
-            });
-        });
-
-        // 智慧標點插入函數 (支援框選包覆)
+        // 智慧標點插入函數
         function insertPunctuation(textareaId, textValue, isWrap) {
             const textarea = document.getElementById(textareaId);
             const startPos = textarea.selectionStart;
@@ -725,35 +761,27 @@ function bindInputEvents() {
             document.body.removeChild(textarea);
         }
 
-// 一鍵組裝三個段落
-function assembleParagraphs(isOrigin = true) {
-    const cause = document.getElementById('input-cause').value.trim();
-    const process = document.getElementById('input-process').value.trim();
-    const result = document.getElementById('input-result').value.trim();
+        // 一鍵組裝三個段落
+        function assembleParagraphs(isOrigin = true) {
+            const cause = document.getElementById('input-cause').value.trim();
+            const process = document.getElementById('input-process').value.trim();
+            const result = document.getElementById('input-result').value.trim();
 
-    if (!cause && !process && !result) {
-        if (isOrigin) showToast("組員的擴寫輸入框目前都是空的喔！");
-        return;
-    }
+            if (!cause && !process && !result) {
+                if (isOrigin) showToast("組員的擴寫輸入框目前都是空的喔！");
+                return;
+            }
 
-    const assembled = `${cause}\n\n${process}\n\n${result}`;
-    const finalEl = document.getElementById('final-paragraph');
-    finalEl.value = assembled;
-    updateCounters();
-    
-    // 💡 核心：將拼貼好的文章同步給全組
-    if (isOrigin) {
-        showToast("成功合體！組員的三個段落已依序完美裝配。");
-        broadcastInput('final-paragraph', assembled); // 同步拼貼區
-        if (realtimeChannel) {
-            realtimeChannel.send({
-                type: 'broadcast',
-                event: 'sync-assemble',
-                payload: { value: assembled }
-            });
+            const assembled = `${cause}\n\n${process}\n\n${result}`;
+            const finalEl = document.getElementById('final-paragraph');
+            finalEl.value = assembled;
+            updateCounters();
+            
+            if (isOrigin) {
+                showToast("成功合體！組員的三個段落已依序完美裝配。");
+                broadcastInput('final-paragraph', assembled);
+            }
         }
-    }
-}
 
         function showToast(message) {
             const toast = document.createElement('div');
@@ -764,30 +792,29 @@ function assembleParagraphs(isOrigin = true) {
         }
 
         // 鱗瀧老師 AI 智慧診斷
-async function checkWithAI() {
-    const contentText = document.getElementById('final-paragraph').value.trim();
-    if (!contentText) {
-        showToast("拼貼編輯區沒有文字，請先輸入或點擊一鍵拼貼！");
-        return;
-    }
+        async function checkWithAI() {
+            const contentText = document.getElementById('final-paragraph').value.trim();
+            if (!contentText) {
+                showToast("拼貼編輯區沒有文字，請先輸入或點擊一鍵拼貼！");
+                return;
+            }
 
-    // 【修改】如果程式碼裡的 apiKey 是空的，就彈出視窗請老師/學生輸入
-    let apiKey = ""; 
-    
-    if (!apiKey) {
-        apiKey = prompt("🔑 請輸入鱗瀧老師的 AI 智慧修練金鑰 (API Key)：");
-        if (!apiKey) {
-            showToast("未輸入金鑰，切換為【離線快速指引模式】");
-            const charCount = contentText.length;
-            const endPunctuationCount = (contentText.match(/[。！？!?]/g) || []).length;
-            const hasSemicolon = /[;；]/.test(contentText);
-            const hasColon = /[:：]/.test(contentText);
-            const hasQuotes = /[「」『』]/.test(contentText);
-            const hasU = /<u>/.test(contentText);
-            showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
-            return;
-        }
-    }
+            let apiKey = ""; 
+            
+            if (!apiKey) {
+                apiKey = prompt("🔑 請輸入鱗瀧老師的 AI 智慧修練金鑰 (API Key)：");
+                if (!apiKey) {
+                    showToast("未輸入金鑰，切換為【離線快速指引模式】");
+                    const charCount = contentText.length;
+                    const endPunctuationCount = (contentText.match(/[。！？!?]/g) || []).length;
+                    const hasSemicolon = /[;；]/.test(contentText);
+                    const hasColon = /[:：]/.test(contentText);
+                    const hasQuotes = /[「」『』]/.test(contentText);
+                    const hasU = /<u>/.test(contentText);
+                    showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
+                    return;
+                }
+            }
 
             document.getElementById('ai-idle-state').classList.add('hidden');
             document.getElementById('ai-result-state').classList.add('hidden');
@@ -803,7 +830,6 @@ async function checkWithAI() {
             const systemPrompt = `你是一位國小高年級語文專家，在學生標點寫作坊中扮演「鱗瀧老師」。\n你的任務是：\n1. 檢核學生的任務報告大作，字數必須滿 100 字，且必須至少有 3 個句末符號（。！？）。\n2. 檢查學生是否融入高年級的新標點符號：分號（；）、專名號（以<u>名詞</u>底線表示）、冒號（：）與雙引號（「」或『』），並檢查其餘指定的進階符號。\n3. 語調要像鬼滅之刃中的鱗瀧老師一樣，溫柔、嚴格、極度溫暖、正向鼓勵，常叫他們「孩子們、小劍士」等。\n4. 提供語意通順的優化建議：明確列出「原本不流暢、平淡的句子」與「鱗瀧老師修飾後華麗生動、標點完美的句子」對比，並解釋修改的原因。\n5. 最後判定一個明確的「過關檢核狀態」(完美過關/有小瑕疵，繼續加油)。\n\n請以 HTML 格式提供回饋。`;
             const userPrompt = `\n學生的大作：\n"""\n${contentText}\n"""\n\n目前指標統計：\n- 總字數：${charCount} (目標 >= 100 字)\n- 句末符號數量：${endPunctuationCount} (目標 >= 3 個)\n- 是否偵測到分號 (；)：${hasSemicolon ? '是' : '否'}\n- 是否偵測到冒號 (：)與引號 (「」或『』)：${hasColon && hasQuotes ? '是' : '否'}\n- 是否偵測到專名號 (<u>)：${hasU ? '是' : '否'}\n\n請依據鱗瀧老師的溫和口吻，為這篇拼貼作品進行寫作診斷與具體的「句子升級方案」，點出學生寫作好的地方，並針對未達標的指標溫柔指點。`;
 
-            // ⚠️ 備註：此處 apiKey 會在 Canvas 平台上自動注入。若要自己完全獨立執行，請自行補上金鑰。
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
             let response = null;
@@ -935,18 +961,18 @@ async function checkWithAI() {
             document.body.removeChild(textarea);
         }
 
-window.onload = function() {
-    generateKeyboard('punct-keyboard-cause', 'input-cause');
-    generateKeyboard('punct-keyboard-process', 'input-process');
-    generateKeyboard('punct-keyboard-result', 'input-result');
-    generateKeyboard('punct-keyboard-final', 'final-paragraph');
+        window.onload = function() {
+            generateKeyboard('punct-keyboard-cause', 'input-cause');
+            generateKeyboard('punct-keyboard-process', 'input-process');
+            generateKeyboard('punct-keyboard-result', 'input-result');
+            generateKeyboard('punct-keyboard-final', 'final-paragraph');
 
-    selectPreset('A', false);
-    
-    // 💡 初始化 Supabase 並綁定所有文字框的同步事件
-    initSupabase();
-    bindInputEvents();
-}
+            selectPreset('A', false);
+            
+            // 初始化 Supabase 並綁定打字事件
+            initSupabase();
+            bindInputEvents();
+        }
     </script>
 </body>
 </html>
