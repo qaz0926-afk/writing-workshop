@@ -34,6 +34,19 @@
             background: #cbd5e1;
             border-radius: 4px;
         }
+        /* Keep AI feedback compact even when Gemini returns indented HTML. */
+        #ai-suggestion-text { line-height: 1.65; overflow-wrap: anywhere; }
+        #ai-suggestion-text div { margin: 0; padding: 0; }
+        #ai-suggestion-text p, #ai-suggestion-text ul, #ai-suggestion-text ol, #ai-suggestion-text blockquote { margin: 0 0 .65rem; }
+        #ai-suggestion-text h2, #ai-suggestion-text h3, #ai-suggestion-text h4 { margin: .9rem 0 .4rem; font-size: 1.05em; font-weight: 800; color: #065f46; }
+        #ai-suggestion-text > :first-child { margin-top: 0; }
+        #ai-suggestion-text ul { list-style: disc; padding-left: 1.35rem; }
+        #ai-suggestion-text ol { list-style: decimal; padding-left: 1.35rem; }
+        #ai-suggestion-text li { margin: .2rem 0; }
+        #ai-suggestion-text table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: .65rem 0; }
+        #ai-suggestion-text th, #ai-suggestion-text td { border: 1px solid #cbd5e1; padding: .6rem; text-align: left; vertical-align: top; }
+        #ai-suggestion-text th { background: #ecfdf5; font-weight: 800; }
+        #ai-suggestion-text td p:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -854,29 +867,53 @@
             btnFinal.className = "w-full px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 transition-all";
         }
 
-        // AI 回饋只允許文字排版，不執行腳本或事件。
+        // AI 回饋只保留安全的文字排版；間距由網站統一控制。
         function sanitizeFeedback(html) {
             const doc = new DOMParser().parseFromString(html, 'text/html');
-            const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H3', 'H4', 'BLOCKQUOTE', 'CODE']);
+            const allowed = new Set(['DIV', 'P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'CODE', 'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD']);
+            const blocked = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE']);
             const clean = node => {
                 if (node.nodeType === 3) return document.createTextNode(node.textContent);
+                if (node.nodeType !== 1 || blocked.has(node.nodeName)) return document.createDocumentFragment();
                 const element = document.createElement(allowed.has(node.nodeName) ? node.nodeName.toLowerCase() : 'span');
                 for (const child of node.childNodes) element.appendChild(clean(child));
                 return element;
             };
             const container = document.createElement('div');
             for (const node of doc.body.childNodes) container.appendChild(clean(node));
+            for (const node of [...container.querySelectorAll('div, p, span, h2, h3, h4, li, blockquote')].reverse()) {
+                if (!node.textContent.trim()) node.remove();
+            }
+            for (const br of [...container.querySelectorAll('br')]) {
+                const previous = br.previousSibling;
+                if (!previous || previous.nodeName === 'BR' || /^(DIV|P|H2|H3|H4|UL|OL|LI|TABLE|TR|BLOCKQUOTE)$/.test(previous.nodeName)) br.remove();
+            }
             return container.innerHTML;
         }
 
         function formatMarkdownToHtml(markdown) {
-            return markdown
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-800 font-black bg-emerald-50 px-1 rounded border border-emerald-200">$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em class="italic text-slate-700">$1</em>')
-                .replace(/### (.*?)\n/g, '<h4 class="text-lg font-black text-slate-900 mt-4 mb-2 border-b-2 border-slate-200 pb-1">$1</h4>')
-                .replace(/## (.*?)\n/g, '<h3 class="text-xl font-black text-emerald-900 mt-5 mb-3 border-l-4 border-emerald-500 pl-2">$1</h3>')
-                .replace(/`([^`]+)`/g, '<code class="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-emerald-700 text-sm">$1</code>')
-                .replace(/\n/g, '<br>');
+            const text = String(markdown ?? '')
+                .replace(/\r\n?/g, '\n')
+                .replace(/^\s*\x60{2,}\s*(?:html|markdown|md)?\s*$/gim, '')
+                .trim();
+            // HTML source newlines are whitespace, not visual line breaks.
+            if (/<\/?(?:div|p|br|h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|strong|b|em|i|u|blockquote)\b[^>]*>/i.test(text)) {
+                return text;
+            }
+            const escapeText = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const inline = value => escapeText(value)
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                .replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>');
+            return text.split(/\n\s*\n/).filter(Boolean).map(block => {
+                const heading = block.match(/^(#{1,4})\s+(.+)$/);
+                if (heading) return '<h3>' + inline(heading[2]) + '</h3>';
+                const lines = block.split('\n');
+                if (lines.every(line => /^\s*[-*]\s+/.test(line))) {
+                    return '<ul>' + lines.map(line => '<li>' + inline(line.replace(/^\s*[-*]\s+/, '')) + '</li>').join('') + '</ul>';
+                }
+                return '<p>' + inline(block.replace(/\n+/g, ' ')) + '</p>';
+            }).join('');
         }
 
         function copyFinalResult() {
