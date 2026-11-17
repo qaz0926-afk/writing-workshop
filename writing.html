@@ -764,12 +764,7 @@
             const hasQuotes = /[「」『』]/.test(contentText);
             const hasU = /<u>/.test(contentText);
 
-            const systemPrompt = `你是一位國小高年級語文專家，在學生標點寫作坊中扮演「鱗瀧老師」。\n你的任務是：\n1. 檢核學生的任務報告大作，字數必須滿 100 字，且必須至少有 3 個句末符號（。！？）。\n2. 檢查學生是否融入高年級的新標點符號：分號（；）、專名號（以<u>名詞</u>底線表示）、冒號（：）與雙引號（「」或『』），並檢查其餘指定的進階符號。\n3. 語調要像鬼滅之刃中的鱗瀧老師一樣，溫柔、嚴格、極度溫暖、正向鼓勵，常叫他們「孩子們、小劍士」等。\n4. 提供語意通順的優化建議：明確列出「原本不流暢、平淡的句子」與「鱗瀧老師修飾後華麗生動、標點完美的句子」對比，並解釋修改的原因。\n5. 最後判定一個明確的「過關檢核狀態」(完美過關/有小瑕疵，繼續加油)。\n\n請以 HTML 格式提供回饋。`;
-            const userPrompt = `\n學生的大作：\n"""\n${contentText}\n"""\n\n目前指標統計：\n- 總字數：${charCount} (目標 >= 100 字)\n- 句末符號數量：${endPunctuationCount} (目標 >= 3 個)\n- 是否偵測到分號 (；)：${hasSemicolon ? '是' : '否'}\n- 是否偵測到冒號 (：)與引號 (「」或『』)：${hasColon && hasQuotes ? '是' : '否'}\n- 是否偵測到專名號 (<u>)：${hasU ? '是' : '否'}\n\n請依據鱗瀧老師的溫和口吻，為這篇拼貼作品進行寫作診斷與具體的「句子升級方案」，點出學生寫作好的地方，並針對未達標的指標溫柔指點。`;
-
-            // ⚠️ 備註：此處 apiKey 會在 Canvas 平台上自動注入。若要自己完全獨立執行，請自行補上金鑰。
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const apiUrl = '/api/diagnose';
 
             let response = null;
             let delay = 1000;
@@ -780,12 +775,9 @@
                     response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: userPrompt }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] }
-                        })
+                        body: JSON.stringify({ contentText })
                     });
-                    if (response.ok) break;
+                    if (response.ok || (response.status !== 429 && response.status < 500)) break;
                 } catch (e) {
                     if (i === maxRetries - 1) {
                         showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
@@ -807,7 +799,7 @@
                 
                 document.getElementById('ai-loading-state').classList.add('hidden');
                 document.getElementById('ai-result-state').classList.remove('hidden');
-                document.getElementById('ai-suggestion-text').innerHTML = formatMarkdownToHtml(aiText);
+                document.getElementById('ai-suggestion-text').innerHTML = sanitizeFeedback(formatMarkdownToHtml(aiText));
 
                 const btnFinal = document.getElementById('btn-copy-final');
                 btnFinal.disabled = false;
@@ -859,6 +851,21 @@
             const btnFinal = document.getElementById('btn-copy-final');
             btnFinal.disabled = false;
             btnFinal.className = "w-full px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-base flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 transition-all";
+        }
+
+        // AI 回饋只允許文字排版，不執行腳本或事件。
+        function sanitizeFeedback(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const allowed = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H3', 'H4', 'BLOCKQUOTE', 'CODE']);
+            const clean = node => {
+                if (node.nodeType === 3) return document.createTextNode(node.textContent);
+                const element = document.createElement(allowed.has(node.nodeName) ? node.nodeName.toLowerCase() : 'span');
+                for (const child of node.childNodes) element.appendChild(clean(child));
+                return element;
+            };
+            const container = document.createElement('div');
+            for (const node of doc.body.childNodes) container.appendChild(clean(node));
+            return container.innerHTML;
         }
 
         function formatMarkdownToHtml(markdown) {
