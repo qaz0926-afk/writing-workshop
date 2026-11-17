@@ -845,7 +845,7 @@ function selectPreset(type, isOrigin = true) {
             const hasQuotes = /[「」『』]/.test(contentText);
             const hasU = /<u>/.test(contentText);
 
-            const apiUrl = '/api/diagnose';
+            const apiUrl = `${SUPABASE_URL}/functions/v1/writing-diagnose`;
 
             let response = null;
             let delay = 1000;
@@ -855,10 +855,10 @@ function selectPreset(type, isOrigin = true) {
                 try {
                     response = await fetch(apiUrl, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
                         body: JSON.stringify({ contentText })
                     });
-                    if (response.ok || (response.status !== 429 && response.status < 500)) break;
+                    if (response.ok || response.status === 503 || (response.status !== 429 && response.status < 500)) break;
                 } catch (e) {
                     if (i === maxRetries - 1) {
                         showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
@@ -870,6 +870,7 @@ function selectPreset(type, isOrigin = true) {
             }
 
             if (!response || !response.ok) {
+                showToast('AI 暫時無法回覆，先提供離線指引。');
                 showLocalDiagnosis(contentText, charCount, endPunctuationCount, hasSemicolon, hasColon, hasQuotes, hasU);
                 return;
             }

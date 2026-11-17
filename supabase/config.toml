@@ -1,0 +1,3 @@
+[functions.writing-diagnose]
+# Function validates the public app apikey itself; publishable keys are not JWTs.
+verify_jwt = false
